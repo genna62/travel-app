@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>西葡10天之旅 | 行程助手 (西進 ➔ 葡出)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@300;400;500;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans HK', sans-serif;
+            background-color: #f3f4f6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .day-btn {
+            transition: all 0.3s ease;
+        }
+        .day-btn.active {
+            background: linear-gradient(135deg, #e11d48, #f97316);
+            color: white;
+            box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3);
+            border-color: transparent;
+            transform: translateY(-2px);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .tab-btn.active {
+            color: #e11d48;
+        }
+        .tab-btn.active .icon-container {
+            background-color: #ffe4e6;
+            border-radius: 9999px;
+            padding: 0.25rem 1rem;
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased flex justify-center selection:bg-rose-200 h-[100dvh] w-screen overflow-hidden bg-gray-200">
+
+    <div class="w-full max-w-md bg-gray-50 h-full flex flex-col shadow-2xl relative">
+        
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-rose-600 to-orange-500 text-white p-4 sm:p-5 rounded-b-3xl shadow-md z-20 shrink-0">
+            <div class="flex justify-between items-center mb-1">
+                <div>
+                    <h1 class="text-xl font-bold tracking-wider">西葡10天精華之旅</h1>
+                    <p class="text-sm opacity-90 font-light mt-1">西進 ➔ 葡出</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="openEditModal()" class="bg-white/20 hover:bg-white/30 p-3 rounded-full backdrop-blur-sm shadow-inner transition text-base" title="編輯當天資料">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button onclick="resetData()" class="bg-white/20 hover:bg-white/30 p-3 rounded-full backdrop-blur-sm shadow-inner transition text-base" title="還原預設資料">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Daily Itinerary View -->
+        <main id="view-daily" class="flex-1 flex flex-col h-full w-full overflow-hidden">
+            <div class="bg-white shadow-sm z-10 shrink-0">
+                <div class="flex overflow-x-auto hide-scrollbar px-4 py-3 space-x-3 items-center" id="day-selector">
+                    <!-- Dynamic Days -->
+                </div>
+            </div>
+
+            <div id="day-content" class="p-4 space-y-4 flex-1 overflow-y-auto pb-6">
+                <!-- Dynamic Day Content -->
+            </div>
+        </main>
+
+        <!-- Travel Info View -->
+        <main id="view-info" class="hidden p-4 space-y-4 flex-1 overflow-y-auto bg-gray-50 pb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fa-solid fa-clipboard-list text-emerald-500 mr-2"></i> 旅遊須知
+            </h2>
+            
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+                <h3 class="font-bold text-rose-600 mb-3 text-lg"><i class="fa-solid fa-battery-full mr-2"></i>極重要：外置充電器</h3>
+                <p class="text-base text-gray-700 font-bold bg-rose-50 p-3 rounded-xl text-rose-800 border border-rose-100">
+                    ⚠️ 必須放在手提行李，嚴禁寄艙！<br><span class="text-sm mt-1 block font-normal">不可超過 20,000mAh (100Wh)。<br>不可在機上使用外置充電器。</span>
+                </p>
+            </div>
+            
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+                <h3 class="font-bold text-blue-600 mb-2 text-lg"><i class="fa-solid fa-plug mr-2"></i>電壓及插座</h3>
+                <p class="text-base text-gray-700 leading-relaxed">西班牙及葡萄牙電壓為 220V。<br>使用<strong class="text-blue-700">兩腳圓型</strong>插座，請自備轉換插頭。</p>
+            </div>
+            
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
+                <h3 class="font-bold text-orange-600 mb-2 text-lg"><i class="fa-solid fa-clock mr-2"></i>時差 (10月份)</h3>
+                <p class="text-base text-gray-700 leading-relaxed">
+                    🇪🇸 西班牙：比香港慢 6 小時<br>
+                    🇵🇹 葡萄牙：比香港慢 7 小時
+                </p>
+            </div>
+        </main>
+
+        <!-- Edit Modal -->
+        <div id="edit-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex flex-col justify-end">
+            <div class="bg-white rounded-t-3xl w-full max-w-md mx-auto h-[85vh] flex flex-col overflow-hidden shadow-2xl transform transition-transform">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+                    <h3 id="modal-title" class="font-bold text-xl text-gray-800">編輯行程</h3>
+                    <button onclick="closeEditModal()" class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-300 transition text-lg"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="p-5 overflow-y-auto flex-1 space-y-5">
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1.5 text-base">城市</label>
+                        <input type="text" id="edit-city" class="w-full border border-gray-300 rounded-xl p-3 text-lg outline-none focus:border-rose-500">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1.5 text-base">標題</label>
+                        <input type="text" id="edit-title" class="w-full border border-gray-300 rounded-xl p-3 text-lg outline-none focus:border-rose-500">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1.5 text-base">行程描述</label>
+                        <textarea id="edit-route" rows="3" class="w-full border border-gray-300 rounded-xl p-3 text-base outline-none focus:border-rose-500"></textarea>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200 shadow-inner">
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="block font-bold text-gray-800 text-base">獨立景點 <span class="text-xs text-gray-500 font-normal ml-1">(可改正地圖位置)</span></label>
+                            <button type="button" onclick="addSpotInput()" class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-200 transition">
+                                <i class="fa-solid fa-plus mr-1"></i>加景點
+                            </button>
+                        </div>
+                        <div id="edit-spots-container" class="space-y-3">
+                            <!-- Dynamic inputs injected here -->
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3 mt-2">
+                        <div class="flex items-center">
+                            <label class="w-12 font-bold text-gray-700 text-base">早餐</label>
+                            <input type="text" id="edit-meal-b" class="flex-1 border border-gray-300 rounded-xl p-2.5 text-base outline-none focus:border-rose-500">
+                        </div>
+                        <div class="flex items-center">
+                            <label class="w-12 font-bold text-gray-700 text-base">午餐</label>
+                            <input type="text" id="edit-meal-l" class="flex-1 border border-gray-300 rounded-xl p-2.5 text-base outline-none focus:border-rose-500">
+                        </div>
+                        <div class="flex items-center">
+                            <label class="w-12 font-bold text-gray-700 text-base">晚餐</label>
+                            <input type="text" id="edit-meal-d" class="flex-1 border border-gray-300 rounded-xl p-2.5 text-base outline-none focus:border-rose-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1.5 text-base">入住酒店</label>
+                        <input type="text" id="edit-hotel" class="w-full border border-gray-300 rounded-xl p-3 text-lg outline-none focus:border-rose-500">
+                    </div>
+                </div>
+                <div class="p-4 border-t border-gray-100 bg-white shrink-0">
+                    <button onclick="saveDayData()" class="w-full py-3.5 bg-rose-600 text-white rounded-xl font-bold text-lg shadow-md hover:bg-rose-700 transition">儲存修改</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="w-full bg-white border-t border-gray-200 flex justify-around px-2 py-2 z-30 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] shrink-0">
+            <button id="btn-nav-daily" onclick="switchView('daily')" class="tab-btn active flex flex-col items-center justify-center w-1/2 text-gray-400 transition pb-1">
+                <div class="icon-container flex items-center justify-center w-12 h-8 mb-1 transition-all">
+                    <i class="fa-regular fa-calendar-days text-xl"></i>
+                </div>
+                <span class="text-sm font-bold">每日行程</span>
+            </button>
+            <button id="btn-nav-info" onclick="switchView('info')" class="tab-btn flex flex-col items-center justify-center w-1/2 text-gray-400 transition pb-1">
+                <div class="icon-container flex items-center justify-center w-12 h-8 mb-1 transition-all">
+                    <i class="fa-solid fa-circle-info text-xl"></i>
+                </div>
+                <span class="text-sm font-bold">旅遊須知</span>
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        const defaultDailyData = [
+            {
+                day: 1, date: "9/30", weekday: "三", city: "香港 ✈️ 杜拜",
+                title: "出發！西葡之旅",
+                weather: null,
+                weatherPlace: { name: "香港", lat: 22.3193, lng: 114.1694, date: "2026-09-30" },
+                assembly: {
+                    time: "16:00",
+                    location: "香港國際機場1號航厦 - G區",
+                    note: "請帶齊護照及身份證，外置充電器必須隨身攜帶"
+                },
+                flights: [
+                    { route: "香港(HKG) ➔ 杜拜(DXB)", no: "EK383", time: "19:00 - 23:00" },
+                    { route: "杜拜(DXB) ➔ 巴塞隆那(BCN)", no: "EK255", time: "03:25 - 08:35(+1)" }
+                ],
+                route: "於指定時間在香港國際機場集合，由專業領隊陪同下，乘搭阿聯酋航空經杜拜轉機，飛往西班牙巴塞隆那。",
+                highlights: ["滿懷期待出發", "阿聯酋航空"],
+                meals: { b: "—", l: "—", d: "航機上" },
+                hotel: "航機上",
+                spots: [
+                    { name: "香港國際機場1號客運大樓", query: "Hong Kong International Airport Terminal 1", lat: 22.31386, lng: 113.92978 }
+                ]
+            },
+            {
+                day: 2, date: "10/1", weekday: "四", city: "巴塞隆那 (西班牙)",
+                title: "抵達巴塞隆那：高第建築與聖家族教堂",
+                weather: null,
+                weatherPlace: { name: "巴塞隆那", lat: 41.3874, lng: 2.1686, date: "2026-10-01" },
+                assembly: null, flights: null,
+                route: "巴塞隆那 ~ 聖家族教堂(包入場) ~ 巴塞隆那球會精品店 ~ 名牌直銷中心 La Roca Village Outlet ~ 聖十字保羅醫院(外觀) ~ 聖荷西市場",
+                highlights: ["聖家族教堂(包入場)", "La Roca Outlet 血拼", "聖荷西市場"],
+                meals: { b: "航機上", l: "豐富午餐", d: "自理" },
+                hotel: "Holiday Inn Express 或同級",
+                spots: [
+                    { name: "聖家族教堂 (Sagrada Família)", query: "Sagrada Família, Barcelona", lat: 41.403611, lng: 2.174444 },
+                    { name: "La Roca Village Outlet", query: "La Roca Village, La Roca del Vallès", lat: 41.611221, lng: 2.344279 },
+                    { name: "聖十字保羅醫院", query: "Recinte Modernista de Sant Pau, Barcelona", lat: 41.411707, lng: 2.17434 },
+                    { name: "聖荷西市場 (La Boqueria)", query: "Mercat de Sant Josep de la Boqueria, Barcelona", lat: 41.381631, lng: 2.171891 }
+                ]
+            },
+            {
+                day: 3, date: "10/2", weekday: "五", city: "巴塞隆那 🚌 華倫西亞",
+                title: "前往華倫西亞與蒙特塞拉特",
+                weather: null,
+                weatherPlace: { name: "華倫西亞", lat: 39.4699, lng: -0.3763, date: "2026-10-02" },
+                assembly: null, flights: null,
+                route: "華倫西亞 ~ 市內觀光 ~ 蒙特塞拉特「聖山」 ~ 巴塞隆那 (客人可自費參加：【費蘭明哥】歌舞表演)",
+                highlights: ["華倫西亞市區觀光", "蒙特塞拉特聖山"],
+                meals: { b: "美式/自助早餐", l: "自理", d: "豐富晚餐" },
+                hotel: "Holiday Inn Express 或同級",
+                spots: [
+                    { name: "華倫西亞市政廣場", query: "Plaza del Ayuntamiento, Valencia", lat: 39.469722, lng: -0.376389 },
+                    { name: "蒙特塞拉特聖山", query: "Santa Maria de Montserrat Abbey, Catalonia", lat: 41.593056, lng: 1.837222 }
+                ]
+            },
+            {
+                day: 4, date: "10/3", weekday: "六", city: "華倫西亞 🚌 杜麗多 🚌 馬德里",
+                title: "杜麗多中世紀古城與首都馬德里",
+                weather: null,
+                weatherPlace: { name: "馬德里", lat: 40.4168, lng: -3.7038, date: "2026-10-03" },
+                assembly: null, flights: null,
+                route: "馬德里 ~ 大皇宮(外觀) ~ 凡塔斯鬥牛場 ~ 杜麗多中世紀古城 ~ 聖多美大教堂 ~ 修道院 ~ 名畫《伯爵的葬禮》(包入場) ~ 華倫西亞 ~ 市政廣場 ~ 古城門 ~ 聖女廣場",
+                highlights: ["杜麗多世界遺產古城", "名畫《伯爵的葬禮》"],
+                meals: { b: "美式/自助早餐", l: "自理", d: "西班牙海鮮飯 Paella + 特色風乾火腿 + 水果酒" },
+                hotel: "Exe Rey Don Jamie 或同級",
+                spots: [
+                    { name: "馬德里大皇宮", query: "Palacio Real de Madrid", lat: 40.418056, lng: -3.714167 },
+                    { name: "凡塔斯鬥牛場", query: "Plaza de Toros de Las Ventas, Madrid", lat: 40.432167, lng: -3.663472 },
+                    { name: "杜麗多古城", query: "Plaza de Zocodover, Toledo", lat: 39.859628, lng: -4.021546 },
+                    { name: "聖多美大教堂", query: "Iglesia de Santo Tomé, Toledo", lat: 39.856699, lng: -4.028322 }
+                ]
+            },
+            {
+                day: 5, date: "10/4", weekday: "日", city: "馬德里 🚌 薩拉曼卡",
+                title: "首都馬德里與大學城薩拉曼卡",
+                weather: null,
+                weatherPlace: { name: "馬德里", lat: 40.4168, lng: -3.7038, date: "2026-10-04" },
+                assembly: null, flights: null,
+                route: "薩拉曼卡 ~ 馬德里 ~ 西班牙廣場(途經) ~ 太陽門廣場 ~ 市政廳 ~ 零公里紀念碑",
+                highlights: ["太陽門廣場", "零公里紀念碑"],
+                meals: { b: "美式/自助早餐", l: "西班牙烤雞餐+意粉+甜品", d: "豐富晚餐" },
+                hotel: "Holiday Inn Express 或同級",
+                spots: [
+                    { name: "西班牙廣場", query: "Plaza de España, Madrid", lat: 40.423382, lng: -3.712165 },
+                    { name: "太陽門廣場", query: "Puerta del Sol, Madrid", lat: 40.416775, lng: -3.703339 },
+                    { name: "零公里紀念碑", query: "Kilómetro Cero, Puerta del Sol, Madrid", lat: 40.416636, lng: -3.70381 }
+                ]
+            },
+            {
+                day: 6, date: "10/5", weekday: "一", city: "薩拉曼卡 🚌 波圖 (葡萄牙)",
+                title: "薩拉曼卡古城與越境葡萄牙",
+                weather: null,
+                weatherPlace: { name: "薩拉曼卡", lat: 40.9701, lng: -5.6635, date: "2026-10-05" },
+                assembly: null, flights: null,
+                route: "波圖 ~ 薩拉曼卡(西班牙) ~ 古城區(世界文化遺產) ~ 薩拉曼卡大學(外觀) ~ 馬約爾廣場 ~ 西班牙火腿工場參觀及試食",
+                highlights: ["薩拉曼卡古城", "火腿工場試食"],
+                meals: { b: "美式/自助早餐", l: "西班牙 Tapas 特式午餐+甜品", d: "豐富晚餐" },
+                hotel: "Tryp 或 Eurostars 或同級",
+                spots: [
+                    { name: "薩拉曼卡大學", query: "Fachada plateresca de la Universidad, Salamanca", lat: 40.961407, lng: -5.667283 },
+                    { name: "馬約爾廣場", query: "Plaza Mayor de Salamanca", lat: 40.965, lng: -5.6641 }
+                ]
+            },
+            {
+                day: 7, date: "10/6", weekday: "二", city: "波圖 🚌 里斯本",
+                title: "波圖酒鄉巡禮與杜羅河",
+                weather: null,
+                weatherPlace: { name: "波圖", lat: 41.1496, lng: -8.6109, date: "2026-10-06" },
+                assembly: null, flights: null,
+                route: "里斯本 ~ 波圖 ~ 自由廣場 ~ 聖本篤火車站 ~ 亨利王子廣場 ~ 波爾薩宮(外觀) ~ 「沙地門砵酒莊」 ~ 品嚐砵酒 ~ 波圖六橋 ~ 杜羅河船河 ~ 「世界上最美書店之一」萊羅書店(包入場)",
+                highlights: ["萊羅書店(包入場)", "品嚐砵酒", "杜羅河船河"],
+                meals: { b: "美式/自助早餐", l: "自理", d: "豐富晚餐" },
+                hotel: "Mercure 或 Novotel Porto Gaia 或同級",
+                spots: [
+                    { name: "聖本篤火車站", query: "Estação de São Bento, Porto", lat: 41.145556, lng: -8.610278 },
+                    { name: "沙地門砵酒莊", query: "Sandeman, Largo Miguel Bombarda 47, Vila Nova de Gaia", lat: 41.137649, lng: -8.6124 },
+                    { name: "杜羅河", query: "Cais da Ribeira, Porto", lat: 41.140647, lng: -8.611186 },
+                    { name: "萊羅書店", query: "Livraria Lello, Porto", lat: 41.146667, lng: -8.614722 }
+                ]
+            },
+            {
+                day: 8, date: "10/7", weekday: "三", city: "里斯本",
+                title: "葡萄牙首都：里斯本世界遺產",
+                weather: null,
+                weatherPlace: { name: "里斯本", lat: 38.7223, lng: -9.1393, date: "2026-10-07" },
+                assembly: null, flights: null,
+                route: "里斯本 ~ 太加斯河 ~ 貝倫塔 ~ 航海家紀念碑 ~ 吉隆尼摩斯修道院 ~ 露茜奧購物廣場 ~ 葡撻專門店(自費品嚐)",
+                highlights: ["貝倫塔", "航海家紀念碑", "吉隆尼摩斯修道院"],
+                meals: { b: "美式/自助早餐", l: "豐富午餐", d: "特色馬介休+墨魚餐 (包飲品一杯)" },
+                hotel: "Holiday Inn Express 或同級",
+                spots: [
+                    { name: "太加斯河", query: "38.6912,-9.2107", lat: 38.6912, lng: -9.2107 },
+                    { name: "貝倫塔", query: "Torre de Belém, Lisbon", lat: 38.691667, lng: -9.215833 },
+                    { name: "航海家紀念碑", query: "Padrão dos Descobrimentos, Lisbon", lat: 38.693611, lng: -9.205556 },
+                    { name: "吉隆尼摩斯修道院", query: "Mosteiro dos Jerónimos, Lisbon", lat: 38.6975, lng: -9.206667 },
+                    { name: "露茜奧購物廣場", query: "Praça do Rossio, Lisbon", lat: 38.713889, lng: -9.139444 }
+                ]
+            },
+            {
+                day: 9, date: "10/8", weekday: "四", city: "里斯本 ✈️ 杜拜",
+                title: "啟程返港",
+                weather: null,
+                weatherPlace: { name: "里斯本", lat: 38.7223, lng: -9.1393, date: "2026-10-08" },
+                assembly: null,
+                flights: [{ route: "里斯本(LIS) ➔ 杜拜(DXB)", no: "EK194", time: "21:15 - 08:05(+1)" }],
+                route: "里斯本最後自由活動，於指定時間前往機場，乘搭阿聯酋航空經杜拜轉機返港",
+                highlights: ["愉快回程", "免稅店購物"],
+                meals: { b: "美式/自助早餐", l: "自理", d: "航機上" },
+                hotel: "航機上",
+                spots: [
+                    { name: "里斯本機場 (LIS)", query: "Aeroporto Humberto Delgado, Lisbon", lat: 38.774167, lng: -9.134167 }
+                ]
+            },
+            {
+                day: 10, date: "10/9", weekday: "五", city: "杜拜 ✈️ 香港",
+                title: "安抵香港",
+                weather: null,
+                weatherPlace: { name: "香港", lat: 22.3193, lng: 114.1694, date: "2026-10-09" },
+                assembly: null,
+                flights: [{ route: "杜拜(DXB) ➔ 香港(HKG)", no: "EK380", time: "10:00 - 21:55" }],
+                route: "經杜拜轉機，安抵香港國際機場。結束愉快難忘的葡萄牙、西班牙10天之旅！",
+                highlights: ["平安返家", "~旅途愉快~"],
+                meals: { b: "航機上", l: "—", d: "—" },
+                hotel: "溫暖的家",
+                spots: [
+                    { name: "香港國際機場", query: "Hong Kong International Airport Terminal 1", lat: 22.31386, lng: 113.92978 }
+                ]
+            }
+        ];
+
+        let dailyData = [];
+        let currentDay = 1;
+
+        window.onload = () => {
+            loadData();
+            renderDaySelector();
+            selectDay(1);
+            loadWeather();
+            startWeatherRefresh();
+        };
+
+        function loadData() {
+            const saved = localStorage.getItem('spain_portugal_itinerary_v9');
+            if (saved) {
+                try {
+                    dailyData = JSON.parse(saved);
+                } catch (e) {
+                    dailyData = JSON.parse(JSON.stringify(defaultDailyData));
+                }
+            } else {
+                dailyData = JSON.parse(JSON.stringify(defaultDailyData));
+            }
+            dailyData.forEach(d => {
+                const fresh = defaultDailyData.find(x => x.day === d.day);
+                if (fresh && fresh.weatherPlace) d.weatherPlace = fresh.weatherPlace;
+                d.weather = null;
+            });
+        }
+
+        function saveData() {
+            const payload = dailyData.map(d => {
+                const copy = { ...d };
+                delete copy.weather;
+                return copy;
+            });
+            localStorage.setItem('spain_portugal_itinerary_v9', JSON.stringify(payload));
+        }
+
+        function resetData() {
+            if (confirm('確定要還原為預設行程嗎？所有修改將會清除。')) {
+                localStorage.removeItem('spain_portugal_itinerary_v9');
+                dailyData = JSON.parse(JSON.stringify(defaultDailyData));
+                renderDaySelector();
+                selectDay(currentDay);
+                loadWeather();
+            }
+        }
+
+        function weatherStyle(code) {
+            const c = Number(code);
+            if (c === 0) return { icon: "fa-sun", color: "text-orange-500", desc: "晴朗" };
+            if (c === 1) return { icon: "fa-sun", color: "text-amber-500", desc: "大致晴朗" };
+            if (c === 2) return { icon: "fa-cloud-sun", color: "text-amber-500", desc: "部分時間有雲" };
+            if (c === 3) return { icon: "fa-cloud", color: "text-gray-500", desc: "陰天" };
+            if (c === 45 || c === 48) return { icon: "fa-smog", color: "text-gray-400", desc: "有霧" };
+            if (c >= 51 && c <= 57) return { icon: "fa-cloud-rain", color: "text-blue-400", desc: "毛毛雨" };
+            if (c >= 61 && c <= 67) return { icon: "fa-cloud-rain", color: "text-blue-500", desc: "有雨" };
+            if (c >= 71 && c <= 77) return { icon: "fa-snowflake", color: "text-sky-400", desc: "有雪" };
+            if (c >= 80 && c <= 82) return { icon: "fa-cloud-showers-heavy", color: "text-blue-500", desc: "驟雨" };
+            if (c === 85 || c === 86) return { icon: "fa-snowflake", color: "text-sky-400", desc: "陣雪" };
+            if (c >= 95) return { icon: "fa-cloud-bolt", color: "text-yellow-500", desc: "雷暴" };
+            return { icon: "fa-cloud", color: "text-gray-500", desc: "多雲" };
+        }
+
+        let weatherRequest = 0;
+
+        async function loadWeather(silent) {
+            const requestId = ++weatherRequest;
+            if (!silent) {
+                dailyData.forEach(d => {
+                    if (d.weatherPlace) d.weather = { loading: true, place: d.weatherPlace.name };
+                });
+                selectDay(currentDay);
+            }
+
+            const groups = new Map();
+            dailyData.forEach(d => {
+                const place = d.weatherPlace;
+                if (!place) return;
+                const key = `${place.lat},${place.lng}`;
+                if (!groups.has(key)) groups.set(key, { lat: place.lat, lng: place.lng, days: [] });
+                groups.get(key).days.push(d);
+            });
+
+            await Promise.all([...groups.values()].map(async (group) => {
+                const dates = group.days.map(d => d.weatherPlace.date).sort();
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${group.lat}&longitude=${group.lng}&models=gfs_seamless&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${dates[0]}&end_date=${dates[dates.length - 1]}`;
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error(String(res.status));
+                    const json = await res.json();
+                    const byDate = {};
+                    (json.daily?.time || []).forEach((date, i) => {
+                        byDate[date] = {
+                            code: json.daily.weather_code[i],
+                            max: json.daily.temperature_2m_max[i],
+                            min: json.daily.temperature_2m_min[i]
+                        };
+                    });
+                    group.days.forEach(d => {
+                        const row = byDate[d.weatherPlace.date];
+                        if (!row || row.max == null || row.min == null) {
+                            if (!silent || !d.weather || d.weather.loading) {
+                                d.weather = { error: true, place: d.weatherPlace.name };
+                            }
+                            return;
+                        }
+                        const style = weatherStyle(row.code);
+                        d.weather = {
+                            temp: `${Math.round(row.min)}°C - ${Math.round(row.max)}°C`,
+                            icon: style.icon,
+                            color: style.color,
+                            desc: style.desc,
+                            place: d.weatherPlace.name
+                        };
+                    });
+                } catch (e) {
+                    group.days.forEach(d => {
+                        if (!silent || !d.weather || d.weather.loading) {
+                            d.weather = { error: true, place: d.weatherPlace.name };
+                        }
+                    });
+                }
+            }));
+
+            if (requestId === weatherRequest) selectDay(currentDay);
+        }
+
+        function startWeatherRefresh() {
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') loadWeather(true);
+            });
+            setInterval(() => loadWeather(true), 10 * 60 * 1000);
+        }
+
+        function weekdayShort(data) {
+            const iso = data.weatherPlace && data.weatherPlace.date;
+            if (!iso) return "";
+            const names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            return names[new Date(iso + "T12:00:00").getDay()];
+        }
+
+        function formatDayMonth(data) {
+            const iso = data.weatherPlace && data.weatherPlace.date;
+            if (!iso) return data.date || "";
+            const parts = iso.split("-");
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            return `${Number(parts[2])} ${months[Number(parts[1]) - 1]}`;
+        }
+
+        function renderDaySelector() {
+            const container = document.getElementById('day-selector');
+            let html = '';
+            
+            dailyData.forEach(d => {
+                html += `
+                    <button onclick="selectDay(${d.day})" id="btn-day-${d.day}" class="day-btn flex flex-col items-center justify-center min-w-[75px] px-3 py-2 rounded-2xl border border-gray-200 bg-white text-gray-500 shrink-0">
+                        <span class="text-xs font-bold uppercase mb-0.5 tracking-wider">Day ${d.day}</span>
+                        <span class="text-base font-bold leading-tight">${formatDayMonth(d)}</span>
+                        <span class="text-xs font-bold tracking-wide">${weekdayShort(d)}</span>
+                    </button>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function selectDay(dayNum) {
+            currentDay = dayNum;
+            const data = dailyData.find(d => d.day === dayNum);
+            if (!data) return;
+
+            document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('active', 'text-white'));
+            const activeBtn = document.getElementById(`btn-day-${dayNum}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+
+            const container = document.getElementById('day-content');
+            container.classList.remove('animate-fade-in');
+            void container.offsetWidth;
+
+            let contentHtml = `
+                <div class="mb-4">
+                    <p class="text-sm font-bold tracking-wide text-gray-500 mb-1">${weekdayShort(data)} · ${formatDayMonth(data)}</p>
+                    <p class="text-rose-600 font-bold text-lg mb-1.5"><i class="fa-solid fa-location-dot mr-1.5"></i>${data.city}</p>
+                    <h2 class="text-3xl font-black text-gray-800 leading-tight">${data.title}</h2>
+                </div>
+            `;
+
+            if (data.weatherPlace) {
+                const place = (data.weather && data.weather.place) || data.weatherPlace.name;
+                if (!data.weather || data.weather.loading) {
+                    contentHtml += `
+                        <div class="bg-gradient-to-r from-blue-50 to-sky-50 rounded-2xl p-4 border border-blue-100 flex items-center justify-between shadow-sm mb-4">
+                            <div>
+                                <p class="text-base text-blue-600/80 font-bold mb-1">${weekdayShort(data)} ${formatDayMonth(data)} 預報 · ${place}</p>
+                                <p class="text-lg text-gray-500">正在取得預報…</p>
+                            </div>
+                            <i class="fa-solid fa-spinner fa-spin text-3xl text-blue-400"></i>
+                        </div>
+                    `;
+                } else if (data.weather.error) {
+                    contentHtml += `
+                        <div class="bg-gradient-to-r from-blue-50 to-sky-50 rounded-2xl p-4 border border-blue-100 flex items-center justify-between shadow-sm mb-4">
+                            <div>
+                                <p class="text-base text-blue-600/80 font-bold mb-1">${weekdayShort(data)} ${formatDayMonth(data)} 預報 · ${place}</p>
+                                <p class="text-lg text-gray-500">暫時無法取得預報</p>
+                            </div>
+                            <i class="fa-solid fa-cloud text-3xl text-gray-300"></i>
+                        </div>
+                    `;
+                } else {
+                    contentHtml += `
+                        <div class="bg-gradient-to-r from-blue-50 to-sky-50 rounded-2xl p-4 border border-blue-100 flex items-center justify-between shadow-sm mb-4">
+                            <div>
+                                <p class="text-base text-blue-600/80 font-bold mb-1">${weekdayShort(data)} ${formatDayMonth(data)} 預報 · ${place}</p>
+                                <p class="text-3xl font-black text-gray-800 leading-tight">${data.weather.temp}</p>
+                                <p class="text-xl text-gray-700 font-medium mt-1">${data.weather.desc}</p>
+                                <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" class="text-xs text-blue-500 font-medium mt-2 inline-block underline">來源：Open-Meteo GFS</a>
+                            </div>
+                            <i class="fa-solid ${data.weather.icon} text-5xl ${data.weather.color}"></i>
+                        </div>
+                    `;
+                }
+            }
+
+            if (data.assembly) {
+                contentHtml += `
+                    <div class="bg-rose-50 border-l-4 border-rose-500 rounded-r-2xl p-4 mb-4 shadow-sm">
+                        <div class="flex items-center text-rose-700 font-bold mb-2 text-lg">
+                            <i class="fa-solid fa-users mr-2"></i> 集合資訊
+                        </div>
+                        <p class="text-base text-gray-800 mb-1.5"><strong>時間：</strong> ${data.assembly.time}</p>
+                        <p class="text-base text-gray-800 mb-2"><strong>地點：</strong> ${data.assembly.location}</p>
+                        <p class="text-sm text-rose-700 mt-2 bg-rose-100/70 inline-block px-3 py-1.5 rounded-lg border border-rose-200">
+                            <i class="fa-solid fa-circle-info mr-1"></i>${data.assembly.note}
+                        </p>
+                    </div>
+                `;
+            }
+
+            if (data.flights && data.flights.length > 0) {
+                data.flights.forEach(f => {
+                    contentHtml += `
+                        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm relative overflow-hidden mb-4">
+                            <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md"><i class="fa-solid fa-plane-departure mr-1"></i>航班資訊</span>
+                                <span class="text-base font-black text-gray-800">${f.no}</span>
+                            </div>
+                            <div class="mt-3 flex items-center justify-between text-base">
+                                <div class="font-bold text-gray-700 w-1/3">${f.route.split('➔')[0]}</div>
+                                <div class="flex-1 flex flex-col items-center px-2">
+                                    <div class="w-full border-t-2 border-dashed border-gray-300 relative my-1">
+                                        <i class="fa-solid fa-plane text-blue-400 absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2"></i>
+                                    </div>
+                                    <span class="text-xs text-gray-500 mt-1 font-medium">${f.time}</span>
+                                </div>
+                                <div class="font-bold text-gray-700 text-right w-1/3">${f.route.split('➔')[1]}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            let highlightsHtml = '';
+            if (data.highlights && data.highlights.length > 0) {
+                highlightsHtml = `<div class="mb-3 flex flex-wrap gap-2">`;
+                data.highlights.forEach(h => {
+                    highlightsHtml += `<span class="inline-flex items-center bg-rose-100 text-rose-700 border-rose-200 text-sm font-bold px-3 py-1.5 rounded-lg border shadow-sm">
+                        <i class="fa-solid fa-camera-retro mr-1.5 opacity-80"></i>${h}
+                    </span>`;
+                });
+                highlightsHtml += `</div>`;
+            }
+
+            contentHtml += `
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm mb-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <i class="fa-solid fa-route text-rose-500 mr-2 text-xl"></i> 今日行程
+                    </h3>
+                    ${highlightsHtml}
+                    <div class="pl-4 border-l-4 border-rose-200 py-1 mb-5 mt-3">
+                        <p class="text-lg text-gray-700 leading-relaxed font-medium">${data.route}</p>
+                    </div>
+            `;
+
+            if (data.spots && data.spots.length > 0) {
+                contentHtml += `
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <p class="text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider"><i class="fa-solid fa-map-pin mr-1 text-rose-500"></i> 景點地圖</p>
+                        <div class="flex flex-col gap-2.5">
+                `;
+                data.spots.forEach(s => {
+                    const mapUrl = spotMapUrl(s);
+                    contentHtml += `
+                        <a href="${mapUrl}" target="_blank" rel="noopener noreferrer" class="bg-blue-50 hover:bg-blue-100 text-blue-700 text-base font-bold px-4 py-3.5 rounded-xl border border-blue-200 flex items-center gap-3 transition shadow-sm no-underline cursor-pointer active:scale-[0.98]">
+                            <div class="bg-blue-200/50 w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-location-dot text-blue-600"></i>
+                            </div>
+                            <span class="flex-1">${s.name}</span>
+                            <i class="fa-solid fa-chevron-right text-blue-300 text-sm"></i>
+                        </a>
+                    `;
+                });
+                contentHtml += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            contentHtml += `</div>`;
+
+            contentHtml += `
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-start">
+                        <div class="bg-orange-50 w-12 h-12 rounded-xl flex items-center justify-center shrink-0 mr-4 text-orange-500">
+                            <i class="fa-solid fa-utensils text-xl"></i>
+                        </div>
+                        <div class="flex-1 w-full text-base">
+                            <div class="flex items-start mb-2.5 pb-2.5 border-b border-gray-50">
+                                <span class="text-gray-400 font-medium w-8 shrink-0">早</span>
+                                <span class="text-gray-700">${data.meals.b}</span>
+                            </div>
+                            <div class="flex items-start mb-2.5 pb-2.5 border-b border-gray-50">
+                                <span class="text-gray-400 font-medium w-8 shrink-0">午</span>
+                                <span class="text-gray-800 font-bold text-orange-600">${data.meals.l}</span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-gray-400 font-medium w-8 shrink-0">晚</span>
+                                <span class="text-gray-800 font-bold text-orange-600">${data.meals.d}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center mb-6">
+                        <div class="bg-indigo-50 w-12 h-12 rounded-xl flex items-center justify-center shrink-0 mr-4 text-indigo-500">
+                            <i class="fa-solid fa-bed text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-400 font-medium mb-1">入住酒店</p>
+                            <p class="text-lg font-bold text-gray-700">${data.hotel}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = contentHtml;
+            container.classList.add('animate-fade-in');
+        }
+
+        function spotMapUrl(s) {
+            if (s.mapUrl) return s.mapUrl;
+            const q = s.query || (typeof s.lat === 'number' ? `${s.lat},${s.lng}` : s.name);
+            return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+        }
+
+        function escapeAttr(text) {
+            return String(text ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;');
+        }
+
+        function mapTargetFromInput(text) {
+            const value = text.trim();
+            if (!value) return null;
+            if (/^https?:\/\//i.test(value)) {
+                const at = value.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+                if (at) return { query: `${at[1]},${at[2]}`, lat: Number(at[1]), lng: Number(at[2]), mapUrl: value };
+                const q = value.match(/[?&]query=([^&]+)/);
+                if (q) {
+                    const decoded = decodeURIComponent(q[1].replace(/\+/g, ' '));
+                    const coord = decoded.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+                    if (coord) return { query: `${coord[1]},${coord[2]}`, lat: Number(coord[1]), lng: Number(coord[2]) };
+                    return { query: decoded };
+                }
+                return { mapUrl: value, query: value };
+            }
+            const coord = value.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+            if (coord) return { query: `${coord[1]},${coord[2]}`, lat: Number(coord[1]), lng: Number(coord[2]) };
+            return { query: value };
+        }
+
+        function switchView(viewId) {
+            document.getElementById('view-daily').classList.add('hidden');
+            document.getElementById('view-info').classList.add('hidden');
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            
+            document.getElementById('btn-nav-daily').classList.remove('active');
+            document.getElementById('btn-nav-info').classList.remove('active');
+            document.getElementById(`btn-nav-${viewId}`).classList.add('active');
+        }
+
+        function openEditModal() {
+            const data = dailyData.find(d => d.day === currentDay);
+            if (!data) return;
+            document.getElementById('modal-title').innerText = `編輯 Day ${data.day} (${weekdayShort(data)} ${formatDayMonth(data)})`;
+            document.getElementById('edit-city').value = data.city;
+            document.getElementById('edit-title').value = data.title;
+            document.getElementById('edit-route').value = data.route;
+            
+            const spotsContainer = document.getElementById('edit-spots-container');
+            spotsContainer.innerHTML = '';
+            if (data.spots && data.spots.length > 0) {
+                data.spots.forEach(spot => addSpotInput(spot));
+            } else {
+                addSpotInput('');
+            }
+
+            document.getElementById('edit-meal-b').value = data.meals.b;
+            document.getElementById('edit-meal-l').value = data.meals.l;
+            document.getElementById('edit-meal-d').value = data.meals.d;
+            document.getElementById('edit-hotel').value = data.hotel;
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        function addSpotInput(spot = '') {
+            const name = typeof spot === 'string' ? spot : (spot.name || '');
+            const mapValue = typeof spot === 'string' ? '' : (spot.mapUrl || spot.query || '');
+            const container = document.getElementById('edit-spots-container');
+            const div = document.createElement('div');
+            div.className = 'spot-item space-y-2 animate-fade-in';
+            div.innerHTML = `
+                <div class="flex gap-2">
+                    <input type="text" value="${escapeAttr(name)}" placeholder="景點名稱 (例: 太加斯河)" class="spot-input flex-1 border border-gray-300 rounded-xl p-3 text-base focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition shadow-sm">
+                    <button type="button" onclick="this.closest('.spot-item').remove()" class="bg-red-50 text-red-500 w-12 rounded-xl border border-red-100 hover:bg-red-200 transition shadow-sm flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-trash text-lg"></i>
+                    </button>
+                </div>
+                <input type="text" value="${escapeAttr(mapValue)}" placeholder="地圖位置：Google 地圖連結、地點名稱或座標" class="spot-map-input w-full border border-gray-300 rounded-xl p-3 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition shadow-sm">
+            `;
+            container.appendChild(div);
+        }
+
+        function saveDayData() {
+            const data = dailyData.find(d => d.day === currentDay);
+            if (!data) return;
+            data.city = document.getElementById('edit-city').value;
+            data.title = document.getElementById('edit-title').value;
+            data.route = document.getElementById('edit-route').value;
+            
+            const spotItems = document.querySelectorAll('.spot-item');
+            const previousSpots = Array.isArray(data.spots) ? data.spots.slice() : [];
+            const cityNameForSearch = data.city
+                .replace(/\(.*?\)/g, '')
+                .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            data.spots = Array.from(spotItems)
+                .map(item => {
+                    const name = item.querySelector('.spot-input').value.trim();
+                    const loc = item.querySelector('.spot-map-input').value.trim();
+                    if (!name) return null;
+                    const parsed = mapTargetFromInput(loc);
+                    if (parsed) {
+                        const spot = { name, query: parsed.query || name };
+                        if (typeof parsed.lat === 'number') {
+                            spot.lat = parsed.lat;
+                            spot.lng = parsed.lng;
+                        }
+                        if (parsed.mapUrl) spot.mapUrl = parsed.mapUrl;
+                        return spot;
+                    }
+                    const existing = previousSpots.find(s => s.name === name && s.query);
+                    if (existing) return { ...existing, name };
+                    return { name, query: `${name} ${cityNameForSearch}`.trim() };
+                })
+                .filter(Boolean);
+                
+            data.meals.b = document.getElementById('edit-meal-b').value;
+            data.meals.l = document.getElementById('edit-meal-l').value;
+            data.meals.d = document.getElementById('edit-meal-d').value;
+            data.hotel = document.getElementById('edit-hotel').value;
+
+            saveData();
+            closeEditModal();
+            selectDay(currentDay);
+        }
+    </script>
+</body>
+</html>
